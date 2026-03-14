@@ -10,31 +10,31 @@ function Login() {
   const submit = async e => {
     e.preventDefault();
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       const payload = JSON.parse(atob(res.data.token.split('.')[1]));
       localStorage.setItem('role', payload.user.role);
       navigate('/dashboard');
     } catch (err) {
-      alert('Login failed');
+      alert(err.response?.data?.msg || 'Login failed');
     }
   };
 
   return (
     <div className="container">
-      <h2>Login</h2>
+      <h2>Login to Smart Health</h2>
       <form onSubmit={submit}>
-        <div>
-          <label>Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
+        <div className="form-group">
+          <label>Email Address</label>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="Enter your email" />
         </div>
-        <div>
+        <div className="form-group">
           <label>Password</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required placeholder="Enter your password" />
         </div>
         <button type="submit">Login</button>
       </form>
-      <p>Don't have account? <Link to="/register">Register</Link></p>
+      <p style={{textAlign: 'center', marginTop: '20px'}}>Don't have an account? <Link to="/register">Register here</Link></p>
     </div>
   );
 }

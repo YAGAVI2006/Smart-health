@@ -6,19 +6,33 @@ const Report = require('../models/Report');
 // submit new symptom report
 router.post('/', auth, async (req, res) => {
   try {
-    const { fever, vomiting, diarrhea, stomachPain, location } = req.body;
+    const { fever, headache, cough, soreThroat, fatigue, shortnessOfBreath, vomiting, diarrhea, stomachPain, musclePain, lossOfTaste, rash, severity, duration, medicationType, medicationName, dosesPerDay, consultedDoctor } = req.body;
     // simple disease prediction mock
-    let prediction = 'Unknown';
-    if (fever && diarrhea) prediction = 'Cholera';
+    let prediction = 'Healthy';
+    if (fever && cough && soreThroat && fatigue) prediction = 'Common Cold';
+    else if (fever && cough && shortnessOfBreath && fatigue) prediction = 'COVID-19';
+    else if (fever && headache && vomiting && fatigue) prediction = 'Flu';
+    else if (fever && diarrhea) prediction = 'Cholera';
     else if (fever && stomachPain) prediction = 'Typhoid';
-    else if (vomiting && diarrhea) prediction = 'Dysentery';
+    else if (vomiting && diarrhea) prediction = 'Food Poisoning';
     else if (diarrhea && stomachPain) prediction = 'Gastroenteritis';
+    else if (rash && fever) prediction = 'Chickenpox';
+    else if (headache && fever && vomiting) prediction = 'Migraine';
+    else if (cough && soreThroat) prediction = 'Strep Throat';
+    else if (fatigue && musclePain) prediction = 'Chronic Fatigue';
+    else if (lossOfTaste && fever) prediction = 'Viral Infection';
+    else if (fever || headache || cough || soreThroat || fatigue || shortnessOfBreath || vomiting || diarrhea || stomachPain || musclePain || lossOfTaste || rash) prediction = 'General Illness';
 
     const report = new Report({
       patient: req.user.id,
-      symptoms: { fever, vomiting, diarrhea, stomachPain },
-      prediction,
-      location
+      symptoms: { fever, headache, cough, soreThroat, fatigue, shortnessOfBreath, vomiting, diarrhea, stomachPain, musclePain, lossOfTaste, rash },
+      severity: severity || 'mild',
+      duration: duration || 1,
+      medicationType: medicationType || 'none',
+      medicationName: medicationName || '',
+      dosesPerDay: dosesPerDay || null,
+      consultedDoctor: consultedDoctor || 'no',
+      prediction
     });
     await report.save();
     res.json(report);
@@ -42,10 +56,10 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
-// get all reports for outbreak map
-router.get('/', auth, async (req, res) => {
+// get user's own reports
+router.get('/my-reports', auth, async (req, res) => {
   try {
-    const reports = await Report.find().populate('patient', ['name']);
+    const reports = await Report.find({ patient: req.user.id }).sort({ createdAt: -1 });
     res.json(reports);
   } catch (err) {
     console.error(err.message);
